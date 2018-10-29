@@ -29,7 +29,6 @@ class Robot : public frc::SampleRobot {
 	const bool BOTTOM = false;
 	const bool OPEN = true;
 	const bool CLOSED = false;
-	int POINT_LENGTH = 3;
 	const double wheelbase_width = 0.6;//in meters
 
 
@@ -260,119 +259,141 @@ void GenerateProfile(){
 	//For Testing purposes only
 void DriveStraight(){
 	ahrs->Reset();
-//Left trajectory
-	FILE *fp = fopen("DriveStraight_left.csv", "r");
-	Segment LeftTrajectory[1024];
-	int leftLength;
-	leftLength = pathfinder_deserialize_csv(fp, LeftTrajectory);
-	fclose(fp);
+		int POINT_LENGTH = 3;
+		Waypoint points[POINT_LENGTH];
+		Waypoint p1 = {0,4,0}; //{X,Y,Angle}
+		Waypoint p2 = {10, 4,0};
+		Waypoint p3 = {12, 4, 0};
+		points[0] = p1;
+		points[1] = p2;
+		points[2] = p3;
 
-//Right Trajectory
-	FILE *fp1 = fopen("DriveStraight_right.csv", "r");
-	Segment RightTrajectory[1024];
-	int rightLength;
-	rightLength = pathfinder_deserialize_csv(fp1, RightTrajectory);
-	fclose(fp1);
+		TrajectoryCandidate candidate;
 
-	//Left Encoder Follower for left side of robot
-	EncoderFollower *leftFollower = (EncoderFollower*)malloc(sizeof(leftFollower));
-	leftFollower->last_error = 0; leftFollower->segment = 0; leftFollower->finished = 0;
+		pathfinder_prepare(points, POINT_LENGTH, FIT_HERMITE_CUBIC, PATHFINDER_SAMPLES_HIGH, 0.001, 15.0, 10.0, 60.0, &candidate);
 
-	//Right Encoder Follower for Right side of robot
-	EncoderFollower *rightFollower = (EncoderFollower*)malloc(sizeof(rightFollower));
-	rightFollower->last_error = 0; rightFollower->segment = 0; rightFollower->finished = 0;
+		int length = candidate.length;
 
+		// Array of Segments (the trajectory points) to store the trajectory in
+		Segment *trajectory = (Segment*)malloc(length * sizeof(trajectory));
 
-	int left_encoder_position = 0.0;
-	int right_encoder_position = 0.0;
-	double wheelCircumpfrence = 0.35052;
-	double max_velocity = 1;
-	//Left Encoder Config ****!!!!Edit if needed!!!!****
-	EncoderConfig leftConfig = {left_encoder_position, 1000, wheelCircumpfrence,
-	        1.0, 0.0, 0.0, 1.0 / max_velocity, 0.0};
-	//Right Encoder Config ****!!!!Edit if needed!!!!****
-	EncoderConfig rightConfig = {right_encoder_position, 1000, wheelCircumpfrence,
-			1.0, 0.0, 0.0, 1.0 / max_velocity, 0.0};
+		// Generate the trajectory
+		pathfinder_generate(&candidate, trajectory);
+
+		Segment leftTrajectory[length];
+		Segment rightTrajectory[length];
+
+		pathfinder_modify_tank(trajectory, length, leftTrajectory, rightTrajectory, wheelbase_width);
+
+		//Left Encoder Follower for left side of robot
+		EncoderFollower *leftFollower = (EncoderFollower*)malloc(sizeof(leftFollower));
+		leftFollower->last_error = 0; leftFollower->segment = 0; leftFollower->finished = 0;
+
+		//Right Encoder Follower for Right side of robot
+		EncoderFollower *rightFollower = (EncoderFollower*)malloc(sizeof(rightFollower));
+		rightFollower->last_error = 0; rightFollower->segment = 0; rightFollower->finished = 0;
 
 
+		int left_encoder_position = 0.0;
+		int right_encoder_position = 0.0;
+		double wheelCircumpfrence = 0.35052;
+		double max_velocity = 1;
+		//Left Encoder Config ****!!!!Edit if needed!!!!****
+		EncoderConfig leftConfig = {left_encoder_position, 1000, wheelCircumpfrence,
+		        1.0, 0.0, 0.0, 1.0 / max_velocity, 0.0};
+		//Right Encoder Config ****!!!!Edit if needed!!!!****
+		EncoderConfig rightConfig = {right_encoder_position, 1000, wheelCircumpfrence,
+				1.0, 0.0, 0.0, 1.0 / max_velocity, 0.0};
 
-	double l_encoder_value = leftEn->Get();
-	double r_encoder_value = rightEn->Get();
 
-	double l = pathfinder_follow_encoder(leftConfig, leftFollower, LeftTrajectory, leftLength, l_encoder_value);
-	double r = pathfinder_follow_encoder(rightConfig, rightFollower, RightTrajectory, rightLength, r_encoder_value);
 
-	//Gyro Code
-	double gyro_heading = ahrs->GetYaw();
-	double desired_heading = r2d(leftFollower->heading);
-	double angle_diffrence = desired_heading - gyro_heading;
-	double turn = 0.8 * (-1.0/80.0) * angle_diffrence;
+		double l_encoder_value = leftEn->Get();
+		double r_encoder_value = rightEn->Get();
 
-	setLeftMotors(l + turn);
-	setRightMotors(r - turn);
+		double l = pathfinder_follow_encoder(leftConfig, leftFollower, leftTrajectory, length, l_encoder_value);
+		double r = pathfinder_follow_encoder(rightConfig, rightFollower, rightTrajectory, length, r_encoder_value);
+
+		//Gyro Code
+		double gyro_heading = ahrs->GetYaw();
+		double desired_heading = r2d(leftFollower->heading);
+		double angle_diffrence = desired_heading - gyro_heading;
+		double turn = 0.8 * (-1.0/80.0) * angle_diffrence;
+
+		setLeftMotors(l + turn);
+		setRightMotors(r - turn);
+
 }
-
-
-
-
 
 
 void Left_LeftScale(){
+	ahrs->Reset();
+ int POINT_LENGTH = 4;
+ Waypoint points[POINT_LENGTH];
+ Waypoint p1 = {0, 24, 0};
+ Waypoint p2 = {18, 24, 0};
+ Waypoint p3 = {21, 24.50, 0};
+ Waypoint p4 = {26, 21, d2r(90)};
+ points[0] = p1;
+ points[1] = p2;
+ points[2] = p3;
+ points[3] = p4;
 
+ TrajectoryCandidate candidate;
+
+ pathfinder_prepare(points, POINT_LENGTH, FIT_HERMITE_CUBIC, PATHFINDER_SAMPLES_HIGH, 0.001, 15.0, 10.0, 60.0, &candidate);
+
+ int length = candidate.length;
+
+ 		// Array of Segments (the trajectory points) to store the trajectory in
+ Segment *trajectory = (Segment*)malloc(length * sizeof(trajectory));
+
+ 		// Generate the trajectory
+ pathfinder_generate(&candidate, trajectory);
+
+ Segment leftTrajectory[length];
+ Segment rightTrajectory[length];
+
+ pathfinder_modify_tank(trajectory, length, leftTrajectory, rightTrajectory, wheelbase_width);
+
+ 		//Left Encoder Follower for left side of robot
+ EncoderFollower *leftFollower = (EncoderFollower*)malloc(sizeof(leftFollower));
+ leftFollower->last_error = 0; leftFollower->segment = 0; leftFollower->finished = 0;
+
+ 		//Right Encoder Follower for Right side of robot
+ EncoderFollower *rightFollower = (EncoderFollower*)malloc(sizeof(rightFollower));
+ rightFollower->last_error = 0; rightFollower->segment = 0; rightFollower->finished = 0;
+
+
+ 		int left_encoder_position = 0.0;
+ 		int right_encoder_position = 0.0;
+ 		double wheelCircumpfrence = 0.35052;
+ 		double max_velocity = 1;
+ 		//Left Encoder Config ****!!!!Edit if needed!!!!****
+ 		EncoderConfig leftConfig = {left_encoder_position, 1000, wheelCircumpfrence,
+ 		        1.0, 0.0, 0.0, 1.0 / max_velocity, 0.0};
+ 		//Right Encoder Config ****!!!!Edit if needed!!!!****
+ 		EncoderConfig rightConfig = {right_encoder_position, 1000, wheelCircumpfrence,
+ 				1.0, 0.0, 0.0, 1.0 / max_velocity, 0.0};
+
+
+
+ 		double l_encoder_value = leftEn->Get();
+ 		double r_encoder_value = rightEn->Get();
+
+ 		double l = pathfinder_follow_encoder(leftConfig, leftFollower, leftTrajectory, length, l_encoder_value);
+ 		double r = pathfinder_follow_encoder(rightConfig, rightFollower, rightTrajectory, length, r_encoder_value);
+
+ 		//Gyro Code
+ 		double gyro_heading = ahrs->GetYaw();
+ 		double desired_heading = r2d(leftFollower->heading);
+ 		double angle_diffrence = desired_heading - gyro_heading;
+ 		double turn = 0.8 * (-1.0/80.0) * angle_diffrence;
+
+ 		setLeftMotors(l + turn);
+ 		setRightMotors(r - turn);
 }
 
 void Right_RightScale(){
-	ahrs->Reset();
-//Left trajectory
-	FILE *fp = fopen("Left_RightScale_left.csv", "r");
-	Segment LeftTrajectory[1024];
-	int leftLength;
-	leftLength = pathfinder_deserialize_csv(fp, LeftTrajectory);
-	fclose(fp);
-
-//Right Trajectory
-	FILE *fp1 = fopen("Right_RightScale_right.csv", "r");
-	Segment RightTrajectory[1024];
-	int rightLength;
-	rightLength = pathfinder_deserialize_csv(fp1, RightTrajectory);
-	fclose(fp1);
-
-	//Left Encoder Follower for left side of robot
-	EncoderFollower *leftFollower = (EncoderFollower*)malloc(sizeof(leftFollower));
-	leftFollower->last_error = 0; leftFollower->segment = 0; leftFollower->finished = 0;
-
-	//Right Encoder Follower for Right side of robot
-	EncoderFollower *rightFollower = (EncoderFollower*)malloc(sizeof(rightFollower));
-	rightFollower->last_error = 0; rightFollower->segment = 0; rightFollower->finished = 0;
-
-
-	int left_encoder_position = 0.0;
-	int right_encoder_position = 0.0;
-	double wheelCircumpfrence = 0.35052;
-	double max_velocity = 1;
-	//Left Encoder Config ****!!!!Edit if needed!!!!****
-	EncoderConfig leftConfig = {left_encoder_position, 1000, wheelCircumpfrence,
-	        1.0, 0.0, 0.0, 1.0 / max_velocity, 0.0};
-	//Right Encoder Config ****!!!!Edit if needed!!!!****
-	EncoderConfig rightConfig = {right_encoder_position, 1000, wheelCircumpfrence,
-			1.0, 0.0, 0.0, 1.0 / max_velocity, 0.0};
-
-
-
-	double l_encoder_value = leftEn->Get();
-	double r_encoder_value = rightEn->Get();
-
-	double l = pathfinder_follow_encoder(leftConfig, leftFollower, LeftTrajectory, leftLength, l_encoder_value);
-	double r = pathfinder_follow_encoder(rightConfig, rightFollower, RightTrajectory, rightLength, r_encoder_value);
-
-	//Gyro Code
-	double gyro_heading = ahrs->GetYaw();
-	double desired_heading = r2d(leftFollower->heading);
-	double angle_diffrence = desired_heading - gyro_heading;
-	double turn = 0.8 * (-1.0/80.0) * angle_diffrence;
-
-	setLeftMotors(l + turn);
-	setRightMotors(r - turn);
 
 }
 
@@ -430,37 +451,37 @@ void Center_RightSwitch(){}
 
 			}
 			else if(allianceSwitch == 'R' && scale == 'L'){//If switch is right and scale is wrong
-				Right_RightSwitch(); //Goes to the switch
+
 			}
 			else if(allianceSwitch == 'L' && scale == 'R'){//If scale is right and switch is wrong
-				Right_RightScale();//goes to the scale
+
 			}
 			else if(allianceSwitch == 'R' && scale == 'R'){//If both scale and switch are on the right side
-				Right_RightScale();//goes to the scale
+
 			}
 		}
 		else if(startPos == 2){//Starting: Center
 			printf("Center\n");
 			if(allianceSwitch == 'L'){//If switch is left
-				Center_LeftSwitch();//Goes to the left switch
+
 			}
 			else if(allianceSwitch == 'R'){//If switch is right
-				Center_RightSwitch();//Goes to the right switch
+
 			}
 		}
 		else if(startPos == 3){//Starting: Left
 			printf("Left\n");
 			if(allianceSwitch == 'R' && scale == 'R'){//If both scale and switch are on the wrong side
-				Left_CrossLine();//Crosses the AutoLine
+
 			}
 			else if(allianceSwitch == 'L' && scale == 'R'){//If switch is right and scale is wrong
-				Left_LeftSwitch();//Goes to the left switch
+
 			}
 			else if(allianceSwitch == 'R' && scale == 'L'){//If scale is right and switch is wrong
-				Left_LeftScale();//Goes to the left scale
+
 			}
 			else if(allianceSwitch == 'L' && scale == 'L'){//If both scale and switch are on the right side
-				Left_LeftScale();//Goes to the left scale
+
 			}
 		}
 		else{
