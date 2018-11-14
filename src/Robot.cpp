@@ -39,6 +39,8 @@ class Robot : public frc::SampleRobot {
 	DigitalInput posRight;
 	DigitalInput posCenter;
 	DigitalInput posLeft;
+
+
 	AHRS *ahrs;
 	//AnalogInput LV_MAX_Sonar;
 
@@ -256,7 +258,7 @@ void GenerateProfile(){
 
 }
 
-	//For Testing purposes only
+	//For Testing purposes only for right now
 void DriveStraight(){
 	ahrs->Reset();
 		int POINT_LENGTH = 3;
@@ -307,7 +309,7 @@ void DriveStraight(){
 
 
 
-		double l_encoder_value = leftEn->Get();
+		double l_encoder_value = left0.GetSelectedSensorPosition();
 		double r_encoder_value = rightEn->Get();
 
 		double l = pathfinder_follow_encoder(leftConfig, leftFollower, leftTrajectory, length, l_encoder_value);
@@ -322,95 +324,12 @@ void DriveStraight(){
 		setLeftMotors(l + turn);
 		setRightMotors(r - turn);
 
-}
-
-
-void Left_LeftScale(){
-	ahrs->Reset();
- int POINT_LENGTH = 4;
- Waypoint points[POINT_LENGTH];
- Waypoint p1 = {0, 24, 0};
- Waypoint p2 = {18, 24, 0};
- Waypoint p3 = {21, 24.50, 0};
- Waypoint p4 = {26, 21, d2r(90)};
- points[0] = p1;
- points[1] = p2;
- points[2] = p3;
- points[3] = p4;
-
- TrajectoryCandidate candidate;
-
- pathfinder_prepare(points, POINT_LENGTH, FIT_HERMITE_CUBIC, PATHFINDER_SAMPLES_HIGH, 0.001, 15.0, 10.0, 60.0, &candidate);
-
- int length = candidate.length;
-
- 		// Array of Segments (the trajectory points) to store the trajectory in
- Segment *trajectory = (Segment*)malloc(length * sizeof(trajectory));
-
- 		// Generate the trajectory
- pathfinder_generate(&candidate, trajectory);
-
- Segment leftTrajectory[length];
- Segment rightTrajectory[length];
-
- pathfinder_modify_tank(trajectory, length, leftTrajectory, rightTrajectory, wheelbase_width);
-
- 		//Left Encoder Follower for left side of robot
- EncoderFollower *leftFollower = (EncoderFollower*)malloc(sizeof(leftFollower));
- leftFollower->last_error = 0; leftFollower->segment = 0; leftFollower->finished = 0;
-
- 		//Right Encoder Follower for Right side of robot
- EncoderFollower *rightFollower = (EncoderFollower*)malloc(sizeof(rightFollower));
- rightFollower->last_error = 0; rightFollower->segment = 0; rightFollower->finished = 0;
-
-
- 		int left_encoder_position = 0.0;
- 		int right_encoder_position = 0.0;
- 		double wheelCircumpfrence = 0.35052;
- 		double max_velocity = 1;
- 		//Left Encoder Config ****!!!!Edit if needed!!!!****
- 		EncoderConfig leftConfig = {left_encoder_position, 1000, wheelCircumpfrence,
- 		        1.0, 0.0, 0.0, 1.0 / max_velocity, 0.0};
- 		//Right Encoder Config ****!!!!Edit if needed!!!!****
- 		EncoderConfig rightConfig = {right_encoder_position, 1000, wheelCircumpfrence,
- 				1.0, 0.0, 0.0, 1.0 / max_velocity, 0.0};
-
-
-
- 		double l_encoder_value = leftEn->Get();
- 		double r_encoder_value = rightEn->Get();
-
- 		double l = pathfinder_follow_encoder(leftConfig, leftFollower, leftTrajectory, length, l_encoder_value);
- 		double r = pathfinder_follow_encoder(rightConfig, rightFollower, rightTrajectory, length, r_encoder_value);
-
- 		//Gyro Code
- 		double gyro_heading = ahrs->GetYaw();
- 		double desired_heading = r2d(leftFollower->heading);
- 		double angle_diffrence = desired_heading - gyro_heading;
- 		double turn = 0.8 * (-1.0/80.0) * angle_diffrence;
-
- 		setLeftMotors(l + turn);
- 		setRightMotors(r - turn);
-}
-
-void Right_RightScale(){
+		//Free all malloc calls
+		free(trajectory);
+		free(leftFollower);
+		free(rightFollower);
 
 }
-
-void Left_CrossLine(){
-
-}
-
-void Right_CrossLine(){}
-
-void Left_LeftSwitch(){}
-
-void Right_RightSwitch(){}
-
-void Center_LeftSwitch(){}
-
-void Center_RightSwitch(){}
-
 
 
 

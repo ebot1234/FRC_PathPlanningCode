@@ -37,7 +37,7 @@
             			
             <storageModule moduleId="cdtBuildSystem" version="4.0.0">
                 				
-                <configuration artifactName="FRCUserProgram" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug" cleanCommand="rm -rf" description="Debug" id="cdt.managedbuild.config.gnu.cross.exe.debug.1104744751" name="Debug" parent="cdt.managedbuild.config.gnu.cross.exe.debug">
+                <configuration artifactName="FRCUserProgram" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug" cleanCommand="rm -rf" description="Debug" id="cdt.managedbuild.config.gnu.cross.exe.debug.1104744751" name="Debug" optionalBuildProperties="" parent="cdt.managedbuild.config.gnu.cross.exe.debug">
                     					
                     <folderInfo id="cdt.managedbuild.config.gnu.cross.exe.debug.1104744751." name="/" resourcePath="">
                         						
@@ -69,7 +69,7 @@
                                 								
                                 <option id="gnu.cpp.compiler.option.debugging.level.969129918" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
                                 								
-                                <option id="gnu.cpp.compiler.option.include.paths.394786621" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.include.paths.394786621" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
                                     									
                                     <listOptionValue builtIn="false" value="&quot;${WPILIB}/cpp/current/include&quot;"/>
                                     									
@@ -89,21 +89,11 @@
                             							
                             <tool id="cdt.managedbuild.tool.gnu.cross.cpp.linker.1895838080" name="Cross G++ Linker" superClass="cdt.managedbuild.tool.gnu.cross.cpp.linker">
                                 								
-                                <option id="gnu.cpp.link.option.libs.1363675797" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" useByScannerDiscovery="false" valueType="libs">
+                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.link.option.libs.1363675797" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" useByScannerDiscovery="false" valueType="libs">
                                     									
                                     <listOptionValue builtIn="false" value="CTRE_Phoenix"/>
                                     									
                                     <listOptionValue builtIn="false" value="CTRE_PhoenixCCI"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="navx_frc_cpp"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="pathfinder"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="CTRE_Phoenix"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="CTRE_PhoenixCCI"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="navx_frc_cpp"/>
                                     									
                                     <listOptionValue builtIn="false" value="pathfinder"/>
                                     									
@@ -111,13 +101,15 @@
                                     								
                                 </option>
                                 								
-                                <option id="gnu.cpp.link.option.paths.1566479969" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
+                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.link.option.paths.1566479969" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
                                     									
                                     <listOptionValue builtIn="false" value="&quot;${WPILIB}/common/current/lib/linux/athena/shared&quot;"/>
                                     									
                                     <listOptionValue builtIn="false" value="&quot;${WPILIB}/cpp/current/reflib/linux/athena/shared&quot;"/>
                                     									
                                     <listOptionValue builtIn="false" value="&quot;${WPILIB}/user/cpp/lib&quot;"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="&quot;C:\Users\ellen.estep.one\navx-mxp\cpp\include&quot;"/>
                                     								
                                 </option>
                                 								
@@ -136,6 +128,8 @@
                             <tool id="cdt.managedbuild.tool.gnu.cross.archiver.412234585" name="Cross GCC Archiver" superClass="cdt.managedbuild.tool.gnu.cross.archiver"/>
                             							
                             <tool id="cdt.managedbuild.tool.gnu.cross.assembler.1047448065" name="Cross GCC Assembler" superClass="cdt.managedbuild.tool.gnu.cross.assembler">
+                                								
+                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="true" id="gnu.both.asm.option.include.paths.1503905740" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath"/>
                                 								
                                 <inputType id="cdt.managedbuild.tool.gnu.assembler.input.1542016468" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
                                 							
@@ -195,7 +189,7 @@
                             							
                             <tool commandLinePattern="${COMMAND} ${FLAGS} ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" id="cdt.managedbuild.tool.gnu.cpp.compiler.base.2105416021" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.base">
                                 								
-                                <option id="gnu.cpp.compiler.option.include.paths.1645322059" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.include.paths.1645322059" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
                                     									
                                     <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}}/src&quot;"/>
                                     									
@@ -245,7 +239,7 @@
                             							
                             <tool id="cdt.managedbuild.tool.gnu.cpp.linker.base.2094820582" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.base">
                                 								
-                                <option id="gnu.cpp.link.option.libs.1563598353" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
+                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.link.option.libs.1563598353" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
                                     									
                                     <listOptionValue builtIn="false" value="wpilibcSim"/>
                                     									
@@ -259,15 +253,17 @@
                                     								
                                 </option>
                                 								
-                                <option id="gnu.cpp.link.option.paths.1677933356" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
+                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.link.option.paths.1677933356" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
                                     									
                                     <listOptionValue builtIn="false" value="/usr/lib/x86_64-linux-gnu"/>
                                     									
                                     <listOptionValue builtIn="false" value="${WPILIB}/simulation/lib"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="&quot;C:\Users\ellen.estep.one\navx-mxp\cpp\include&quot;"/>
                                     								
                                 </option>
                                 								
-                                <option id="gnu.cpp.link.option.other.1549699992" name="Other options (-Xlinker [option])" superClass="gnu.cpp.link.option.other" valueType="stringList">
+                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.link.option.other.1549699992" name="Other options (-Xlinker [option])" superClass="gnu.cpp.link.option.other" valueType="stringList">
                                     									
                                     <listOptionValue builtIn="false" value="-rpath ${WPILIB}/simulation/lib"/>
                                     								
@@ -361,7 +357,7 @@
                             							
                             <tool command="&quot;C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\amd64\cl&quot;" commandLinePattern="${COMMAND} ${FLAGS} /Fo${OUTPUT_PREFIX}${OUTPUT} ${INPUTS} /wd4068 /EHsc" errorParsers="" id="cdt.managedbuild.tool.gnu.cross.cpp.compiler.809153465" name="Cross G++ Compiler" superClass="cdt.managedbuild.tool.gnu.cross.cpp.compiler">
                                 								
-                                <option id="gnu.cpp.compiler.option.include.paths.599803694" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.include.paths.599803694" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
                                     									
                                     <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src}&quot;"/>
                                     									
@@ -409,7 +405,7 @@
                                 								
                                 <option id="gnu.cpp.compiler.option.other.pic.594318292" name="Position Independent Code (-fPIC)" superClass="gnu.cpp.compiler.option.other.pic" useByScannerDiscovery="false" value="false" valueType="boolean"/>
                                 								
-                                <option id="gnu.cpp.compiler.option.preprocessor.def.1865235685" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
+                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.preprocessor.def.1865235685" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
                                     									
                                     <listOptionValue builtIn="false" value="_USE_MATH_DEFINES"/>
                                     									
@@ -433,7 +429,11 @@
                                 								
                                 <option id="gnu.cpp.link.option.libs.231732731" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs"/>
                                 								
-                                <option id="gnu.cpp.link.option.paths.122555745" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths"/>
+                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.link.option.paths.122555745" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
+                                    									
+                                    <listOptionValue builtIn="false" value="&quot;C:\Users\ellen.estep.one\navx-mxp\cpp\include&quot;"/>
+                                    								
+                                </option>
                                 								
                                 <option id="gnu.cpp.link.option.shared.1816604740" name="Shared (-shared)" superClass="gnu.cpp.link.option.shared" value="false" valueType="boolean"/>
                                 								
@@ -513,21 +513,11 @@
     	
     <storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
     	
+    <storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
+    	
     <storageModule moduleId="scannerConfiguration">
         		
         <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-        		
-        <scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.debug.912379410.387599128;cdt.managedbuild.config.gnu.mingw.exe.debug.912379410.387599128.;cdt.managedbuild.tool.gnu.cross.cpp.compiler.809153465;cdt.managedbuild.tool.gnu.cpp.compiler.input.1150869869">
-            			
-            <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-            		
-        </scannerConfigBuildInfo>
-        		
-        <scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.debug.912379410.387599128;cdt.managedbuild.config.gnu.mingw.exe.debug.912379410.387599128.;org.eclipse.cdt.msvc.cl.dll.debug.544581750;org.eclipse.cdt.msvc.cl.inputType.1806965547">
-            			
-            <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.msw.build.clScannerInfo"/>
-            		
-        </scannerConfigBuildInfo>
         		
         <scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.debug.912379410.387599128;cdt.managedbuild.config.gnu.mingw.exe.debug.912379410.387599128.;org.eclipse.cdt.msvc.cl.c.dll.debug.748290057;org.eclipse.cdt.msvc.cl.inputType.c.690275938">
             			
@@ -559,7 +549,49 @@
             		
         </scannerConfigBuildInfo>
         		
+        <scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.debug.912379410.387599128;cdt.managedbuild.config.gnu.mingw.exe.debug.912379410.387599128.;org.eclipse.cdt.msvc.cl.c.dll.debug.1658947706;org.eclipse.cdt.msvc.cl.inputType.c.2076377067">
+            			
+            <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.msw.build.clScannerInfo"/>
+            		
+        </scannerConfigBuildInfo>
+        		
+        <scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.1104744751.2017904325;cdt.managedbuild.config.gnu.cross.exe.debug.1104744751.2017904325.;cdt.managedbuild.tool.gnu.cpp.compiler.base.2105416021;cdt.managedbuild.tool.gnu.cpp.compiler.input.1758810658">
+            			
+            <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+            		
+        </scannerConfigBuildInfo>
+        		
+        <scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.debug.912379410.387599128;cdt.managedbuild.config.gnu.mingw.exe.debug.912379410.387599128.;org.eclipse.cdt.msvc.cl.dll.debug.544581750;org.eclipse.cdt.msvc.cl.inputType.1806965547">
+            			
+            <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.msw.build.clScannerInfo"/>
+            		
+        </scannerConfigBuildInfo>
+        		
+        <scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.1104744751;cdt.managedbuild.config.gnu.cross.exe.debug.1104744751.;cdt.managedbuild.tool.gnu.cross.c.compiler.1261239456;cdt.managedbuild.tool.gnu.c.compiler.input.1793678673">
+            			
+            <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+            		
+        </scannerConfigBuildInfo>
+        		
+        <scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.debug.912379410.387599128;cdt.managedbuild.config.gnu.mingw.exe.debug.912379410.387599128.;cdt.managedbuild.tool.gnu.c.compiler.mingw.base.510224028;cdt.managedbuild.tool.gnu.c.compiler.input.323654435">
+            			
+            <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+            		
+        </scannerConfigBuildInfo>
+        		
         <scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.debug.912379410.387599128;cdt.managedbuild.config.gnu.mingw.exe.debug.912379410.387599128.;cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.debug.1647706237;cdt.managedbuild.tool.gnu.cpp.compiler.input.1338339147">
+            			
+            <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+            		
+        </scannerConfigBuildInfo>
+        		
+        <scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.debug.912379410.387599128;cdt.managedbuild.config.gnu.mingw.exe.debug.912379410.387599128.;cdt.managedbuild.tool.gnu.cross.cpp.compiler.809153465;cdt.managedbuild.tool.gnu.cpp.compiler.input.1150869869">
+            			
+            <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+            		
+        </scannerConfigBuildInfo>
+        		
+        <scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.1104744751.2017904325;cdt.managedbuild.config.gnu.cross.exe.debug.1104744751.2017904325.;cdt.managedbuild.tool.gnu.c.compiler.base.2039239712;cdt.managedbuild.tool.gnu.c.compiler.input.1197133064">
             			
             <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
             		
@@ -570,27 +602,7 @@
             <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
             		
         </scannerConfigBuildInfo>
-        		
-        <scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.1104744751;cdt.managedbuild.config.gnu.cross.exe.debug.1104744751.;cdt.managedbuild.tool.gnu.cross.c.compiler.1261239456;cdt.managedbuild.tool.gnu.c.compiler.input.1793678673">
-            			
-            <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-            		
-        </scannerConfigBuildInfo>
-        		
-        <scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.debug.912379410.387599128;cdt.managedbuild.config.gnu.mingw.exe.debug.912379410.387599128.;org.eclipse.cdt.msvc.cl.c.dll.debug.1658947706;org.eclipse.cdt.msvc.cl.inputType.c.2076377067">
-            			
-            <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.msw.build.clScannerInfo"/>
-            		
-        </scannerConfigBuildInfo>
-        		
-        <scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.debug.912379410.387599128;cdt.managedbuild.config.gnu.mingw.exe.debug.912379410.387599128.;cdt.managedbuild.tool.gnu.c.compiler.mingw.base.510224028;cdt.managedbuild.tool.gnu.c.compiler.input.323654435">
-            			
-            <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-            		
-        </scannerConfigBuildInfo>
         	
     </storageModule>
-    	
-    <storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
     
 </cproject>
