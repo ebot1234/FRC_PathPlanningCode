@@ -13,6 +13,8 @@
 #include <ctre/phoenix/MotorControl/NeutralMode.h>
 #include <ctre/phoenix/MotorControl/FeedbackDevice.h>
 #include <pathfinder.h>
+#include <States/IntakeStates.h>
+
 
 
 
@@ -30,6 +32,8 @@ class Robot : public frc::SampleRobot {
 	const bool OPEN = true;
 	const bool CLOSED = false;
 	const double wheelbase_width = 0.6;//in meters
+
+
 
 
 	//Control System
@@ -102,6 +106,7 @@ public:
 		boxSensor(0)
 
 
+
 	{
 		ahrs = new AHRS(SerialPort::kMXP);
 		stick0 = new Joystick(0);
@@ -146,6 +151,7 @@ public:
 
 		printf("Valentina Tereshkova, Reporting for duty.");
 	}
+
 
 	void SetSpeed(double left, double right){
 		left0.Set(ControlMode::PercentOutput, left);
@@ -254,11 +260,8 @@ public:
 		right1.Set(ControlMode::PercentOutput, right);
 	}
 
-void GenerateProfile(){
 
-}
-
-	//For Testing purposes only for right now
+//For Testing purposes only for right now
 void DriveStraight(){
 	ahrs->Reset();
 		int POINT_LENGTH = 3;
@@ -309,8 +312,8 @@ void DriveStraight(){
 
 
 
-		double l_encoder_value = left0.GetSelectedSensorPosition();
-		double r_encoder_value = rightEn->Get();
+		double l_encoder_value = left0.GetSelectedSensorPosition(0);
+		double r_encoder_value = right0.GetSelectedSensorPosition(0);
 
 		double l = pathfinder_follow_encoder(leftConfig, leftFollower, leftTrajectory, length, l_encoder_value);
 		double r = pathfinder_follow_encoder(rightConfig, rightFollower, rightTrajectory, length, r_encoder_value);
@@ -324,6 +327,8 @@ void DriveStraight(){
 		setLeftMotors(l + turn);
 		setRightMotors(r - turn);
 
+
+
 		//Free all malloc calls
 		free(trajectory);
 		free(leftFollower);
@@ -331,6 +336,49 @@ void DriveStraight(){
 
 }
 
+void updateLiftAndIntake(IntakeStates states){
+	switch(states){
+	case DELIVER_CUBE_SCALE:
+		DeliverCubeScale(true, -1, 1.5);//pentaTilt, intakeSpeed, intakeTime
+		break;
+	case DELIVER_CUBE_SWITCH:
+		DeliverCubeSwitch(true, -1, 1.5, 1.5, 0.8);//pentaTilit, intakeSpeed, intakeRunTime, liftTime, liftSpeed
+		break;
+	case GET_CUBE:
+		Get_Cube(true, 1, 2);//pentaTilt, intakeSpeed, intakeTime
+		break;
+	default:
+		defaultLiftandIntakeState(false, false);//pentaTilt, clampState
+	}
+}
+
+void DeliverCubeScale(bool pentaTiltState, double intakeSpeed, double time){
+	RunLiftLimits(TOP);
+	pentaTilt.Set(pentaTiltState);
+	RunIntakeTime(intakeSpeed, time);
+	pentaTilt.Set(false);
+}
+
+void DeliverCubeSwitch(bool pentaTiltState, double intakeSpeed, double time, double liftPosition, double liftSpeed){
+	RunLiftTime(liftSpeed, liftPosition);
+	pentaTilt.Set(pentaTiltState);
+	RunIntakeTime(intakeSpeed, time);
+	pentaTilt.Set(false);
+}
+
+void Get_Cube(bool pentaTiltState, double intakeSpeed, double time){
+	RunLiftLimits(BOTTOM);
+	pentaTilt.Set(pentaTiltState);
+	RunIntakeTime(intakeSpeed, time);
+	pentaTilt.Set(false);
+}
+
+void defaultLiftandIntakeState(bool pentaTiltState, bool clampState){
+	RunLiftLimits(BOTTOM);
+	pentaTilt.Set(pentaTiltState);
+	clamp.Set(clampState);
+	printf("Lift in default position");
+}
 
 
 
