@@ -6,11 +6,12 @@
 #include <frc/Timer.h>
 #include <frc/smartdashboard/SmartDashboard.h>
 #include "ctre/Phoenix.h"
-#include <ctre/phoenix/MotorControl/ControlMode.h>
-#include <ctre/phoenix/MotorControl/NeutralMode.h>
-#include <ctre/phoenix/MotorControl/FeedbackDevice.h>
-#include <AHRS.h>
-#include <pathfinder.h>
+#include "ctre/phoenix/MotorControl/ControlMode.h"
+#include "ctre/phoenix/MotorControl/NeutralMode.h"
+#include "ctre/phoenix/MotorControl/FeedbackDevice.h"
+#include "AHRS.h"
+#include "pathfinder.h"
+#include <WPILib.h>
 
 Robot::Robot() {
 	
@@ -52,11 +53,16 @@ const double K_T = 0.35;
 //Motors and CS
 frc::Joystick stick0{0};
 frc::Joystick stick1{1};
-
 TalonSRX driveLF = {12};
 TalonSRX driveLR = {13};
 TalonSRX driveRF = {4};
 TalonSRX driveRR = {6};
+frc::Solenoid clamp{0};
+frc::Solenoid pentTilt{1};
+TalonSRX PTO0 = {5};
+TalonSRX PTO1 = {9};
+frc::Encoder PTO_Enc = {4, 5, frc::Encoder::EncodingType::k4X};
+frc::PowerDistributionPanel m_pdp;
 
 AHRS ahrs = {SerialPort::kMXP};
 
