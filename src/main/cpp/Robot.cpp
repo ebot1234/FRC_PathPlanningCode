@@ -6,15 +6,50 @@
 #include <frc/Timer.h>
 #include <frc/smartdashboard/SmartDashboard.h>
 #include "ctre/Phoenix.h"
+#include <ctre/phoenix/MotorControl/ControlMode.h>
+#include <ctre/phoenix/MotorControl/NeutralMode.h>
+#include <ctre/phoenix/MotorControl/FeedbackDevice.h>
 #include <AHRS.h>
 #include <pathfinder.h>
 
 Robot::Robot() {
 	
 }
-
+//Hype's Constants
 const double THRESHOLD = 0.1;
+const int LIFT_TOP = 600;
+const int LIFT_BOTTOM = 0;
+const bool TOP = true;
+const bool BOTTOM = false;
+const bool OPEN = true;
+const bool CLOSED = false;
 
+//Pathfinding Varibles
+const double TIMESTEP = 0.02;
+const double MAX_VEL = 18;
+const double MAX_ACCEL = 12;
+const double MAX_JERK = 60;
+const double WHEEL_CIRCUMFERENCE = 13.8;
+double Wheel_Base_Width = 30;
+TrajectoryCandidate candidate;
+Segment* trajectory;
+Segment* leftTrajectory;
+Segment* rightTrajectory;
+int length;
+EncoderFollower* leftFollower = (EncoderFollower*)malloc(sizeof(EncoderFollower)); 
+EncoderFollower* rightFollower = (EncoderFollower*)malloc(sizeof(EncoderFollower));
+EncoderConfig leftConfig;
+EncoderConfig rightConfig;
+//Encoder Config Varibles
+const int TICKS_PER_REV = 26214;
+const double K_P = 1.0;
+const double K_I = 0.0;
+const double K_D = 0.15;
+const double K_V = 0.06;
+const double K_A = 0.0856;
+const double K_T = 0.35;
+
+//Motors and CS
 frc::Joystick stick0{0};
 frc::Joystick stick1{1};
 
@@ -41,6 +76,15 @@ void Robot::RobotInit() {
 	m_chooser.SetDefaultOption(kAutoNameDefault, kAutoNameDefault);
 	m_chooser.AddOption(kAutoNameCustom, kAutoNameCustom);
 	frc::SmartDashboard::PutData("Auto Modes", &m_chooser);
+
+	driveLF.SetNeutralMode(NeutralMode::Brake);
+	driveLR.SetNeutralMode(NeutralMode::Brake);
+	driveRF.SetNeutralMode(NeutralMode::Brake);
+	driveRR.SetNeutralMode(NeutralMode::Brake);
+
+	driveLF.SetInverted(true);
+	driveLR.SetInverted(true);
+
 }
 
 void setLeftMotors(double speed){
@@ -53,140 +97,76 @@ void setRightMotors(double speed){
 	driveRR.Set(ControlMode::PercentOutput, speed);
 }
 
-void testPathCSV(){
-	//Deserializes the pre-generated trajectories
-	FILE *lf = fopen("Test_left_detailed.csv", "r");
-	Segment leftTrajectory[1024];
-	int leftLength = pathfinder_deserialize_csv(lf, leftTrajectory);
+void TestPath(){
+	
+	//Path Generation
+	trajectory = NULL;
+	leftTrajectory = NULL;
+	rightTrajectory = NULL;
+	length = 0;
 
-	FILE *rf = fopen("Test_right_detailed.csv", "r");
-	Segment rightTrajectory[1024];
-	int rightLength = pathfinder_deserialize_csv(rf, rightTrajectory);
+	const int POINT_LENGTH = 2;
 
-	//Left Encoder Follower for left side of robot
-	EncoderFollower *leftFollower = (EncoderFollower*)malloc(sizeof(leftFollower));
-	leftFollower->last_error = 0; leftFollower->segment = 0; leftFollower->finished = 0;
-
-	//Right Encoder Follower for Right side of robot
-	EncoderFollower *rightFollower = (EncoderFollower*)malloc(sizeof(rightFollower));
-	rightFollower->last_error = 0; rightFollower->segment = 0; rightFollower->finished = 0;
-
-
-	int left_encoder_position = 0.0;
-	int right_encoder_position = 0.0;
-	double wheelCircumpfrence = 0.35052;
-	double max_velocity = 1;
-	//Left Encoder Config ****!!!!Edit if needed!!!!****
-	EncoderConfig leftConfig = {left_encoder_position, 1000, wheelCircumpfrence,
-		        1.0, 0.0, 0.0, 1.0 / max_velocity, 0.0};
-	//Right Encoder Config ****!!!!Edit if needed!!!!****
-	EncoderConfig rightConfig = {right_encoder_position, 1000, wheelCircumpfrence,
-				1.0, 0.0, 0.0, 1.0 / max_velocity, 0.0};
-
-
-
-	double l_encoder_value = driveLF.GetSelectedSensorPosition(0);
-	double r_encoder_value = driveLR.GetSelectedSensorPosition(0);
-
-	double l = pathfinder_follow_encoder(leftConfig, leftFollower, leftTrajectory, leftLength, l_encoder_value);
-	double r = pathfinder_follow_encoder(rightConfig, rightFollower, rightTrajectory, rightLength, r_encoder_value);
-
-	//Gyro Code
-	double gyro_heading = ahrs.GetYaw();
-	double desired_heading = r2d(leftFollower->heading);
-	double angle_diffrence = desired_heading - gyro_heading;
-	double turn = 0.8 * (-1.0/80.0) * angle_diffrence;
-
-	setLeftMotors(l + turn);
-	setRightMotors(r - turn);
-
-	//Free's the malloc pointers
-	free(leftFollower);
-	free(rightFollower);
-
-}
-
-void testPath(){
-	//Calculate the points
-	int point_length = 3;
-
-	Waypoint *points  = (Waypoint*)malloc(sizeof(Waypoint) * point_length);
-
-	Waypoint p1 = {0, 0, 0}; //X,Y,Angle
-	Waypoint p2 = {4, 0, 0};
-	Waypoint p3 = {6, 0, 0};
+	Waypoint points[POINT_LENGTH];
+	Waypoint p1 = {0, 0, d2r(0)};
+	Waypoint p2 = {1, 0, d2r(0)};
 	points[0] = p1;
 	points[1] = p2;
-	points[2] = p3;
 
-	TrajectoryCandidate candidate;
-	pathfinder_prepare(points, point_length, FIT_HERMITE_CUBIC, PATHFINDER_SAMPLES_HIGH, 0.001, 15.0, 10.0, 60.0, &candidate);
-	free(points);
-
-	int length = candidate.length;
-	Segment *trajectory = (Segment*)malloc(length * sizeof(Segment));
-	
-	//Generates the path into trajectory
+	pathfinder_prepare(points, POINT_LENGTH, FIT_HERMITE_CUBIC, PATHFINDER_SAMPLES_HIGH, TIMESTEP, MAX_VEL, MAX_ACCEL, MAX_JERK, &candidate);
+	length = candidate.length;
+	trajectory = (Segment*)malloc(length * sizeof(Segment));
 	pathfinder_generate(&candidate, trajectory);
 
-	//Finds the left and right trajectories by using the length of the trajectory candidate
-	Segment *leftTrajectory = (Segment*)malloc(sizeof(Segment) * length);
-	Segment *rightTrajectory = (Segment*)malloc(sizeof(Segment) * length);
+	//Modify for tank drive base
+	leftTrajectory = (Segment*)malloc(length * sizeof(Segment));
+	rightTrajectory = (Segment*)malloc(length * sizeof(Segment));
 
-	//Wheel Base Width
-	double wheel_base_width = 0.762;
-	//Modifies the trajectories to work with our type of drivebase
-	pathfinder_modify_tank(trajectory, length, leftTrajectory, rightTrajectory, wheel_base_width);
+	pathfinder_modify_tank(trajectory, length, leftTrajectory, rightTrajectory, Wheel_Base_Width);
 
-	//Left Encoder Follower for left side of robot
-	EncoderFollower *leftFollower = (EncoderFollower*)malloc(sizeof(leftFollower));
-	leftFollower->last_error = 0; leftFollower->segment = 0; leftFollower->finished = 0;
+	leftConfig = {driveLF.GetSelectedSensorPosition(0), TICKS_PER_REV, WHEEL_CIRCUMFERENCE, K_P, K_I, K_D, K_V, K_A};
+	rightConfig = {driveRF.GetSelectedSensorPosition(0), TICKS_PER_REV, WHEEL_CIRCUMFERENCE, K_P, K_I, K_D, K_V, K_A};
 
-	//Right Encoder Follower for Right side of robot
-	EncoderFollower *rightFollower = (EncoderFollower*)malloc(sizeof(rightFollower));
-	rightFollower->last_error = 0; rightFollower->segment = 0; rightFollower->finished = 0;
+	leftFollower->last_error = 0;
+	leftFollower->segment = 0;
+	leftFollower->finished = 0;
 
+	rightFollower->last_error = 0;
+	rightFollower->segment = 0;
+	rightFollower->finished = 0;
 
-	int left_encoder_position = 0.0;
-	int right_encoder_position = 0.0;
-	double wheelCircumpfrence = 0.35052;
-	double max_velocity = 1;
-	//Left Encoder Config ****!!!!Edit if needed!!!!****
-	EncoderConfig leftConfig = {left_encoder_position, 1000, wheelCircumpfrence,
-		        1.0, 0.0, 0.0, 1.0 / max_velocity, 0.0};
-	//Right Encoder Config ****!!!!Edit if needed!!!!****
-	EncoderConfig rightConfig = {right_encoder_position, 1000, wheelCircumpfrence,
-				1.0, 0.0, 0.0, 1.0 / max_velocity, 0.0};
+	//Current encoder positions
+	int currentLeftPos = driveLF.GetSelectedSensorPosition(0);
+	int currentRightPos = driveRF.GetSelectedSensorPosition(0);
+	printf("left encoder position %i, right encoder position %i", currentLeftPos, currentRightPos);
 
+	//path followers
+	double leftSide = pathfinder_follow_encoder(leftConfig, leftFollower, leftTrajectory, length, currentLeftPos);
+	double rightSide = pathfinder_follow_encoder(rightConfig, rightFollower, rightTrajectory, length, currentRightPos);
 
-
-	double l_encoder_value = driveLF.GetSelectedSensorPosition(0);
-	double r_encoder_value = driveLR.GetSelectedSensorPosition(0);
-
-	double l = pathfinder_follow_encoder(leftConfig, leftFollower, leftTrajectory, length, l_encoder_value);
-	double r = pathfinder_follow_encoder(rightConfig, rightFollower, rightTrajectory, length, r_encoder_value);
-
-	//Gyro Code
-	double gyro_heading = ahrs.GetYaw();
+	//gyro calculations
+	double currentYaw = ahrs.GetYaw();
 	double desired_heading = r2d(leftFollower->heading);
-	double angle_diffrence = desired_heading - gyro_heading;
-	double turn = 0.8 * (-1.0/80.0) * angle_diffrence;
+	double angleDifference = r2d(leftFollower->heading) - currentYaw;
+	double turn = K_T * angleDifference;
 
-	setLeftMotors(l + turn);
-	setRightMotors(r - turn);
+	//Set the motors to the path
+	driveLF.Set(ControlMode::PercentOutput, leftSide + turn);
+	driveLR.Set(ControlMode::PercentOutput, leftSide + turn);
 
-	//Free's the malloc pointers
-	free(trajectory);
-	free(leftTrajectory);
-	free(rightTrajectory);
-	free(leftFollower);
-	free(rightFollower);
-
+	driveRF.Set(ControlMode::PercentOutput, rightSide - turn);
+	driveRR.Set(ControlMode::PercentOutput, rightSide - turn);
 }
 
+
 void Robot::Autonomous() {
-	testPath();
-	//testPathCSV();
+	driveLF.SetNeutralMode(NeutralMode::Brake);
+	driveLR.SetNeutralMode(NeutralMode::Brake);
+	driveRF.SetNeutralMode(NeutralMode::Brake);
+	driveRR.SetNeutralMode(NeutralMode::Brake);
+	
+	//Runs a path that is 1ft in lenght straight
+	TestPath();
 }
 
 
