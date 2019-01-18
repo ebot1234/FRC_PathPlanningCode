@@ -50,6 +50,7 @@ const double K_V = 0.06;
 const double K_A = 0.0856;
 const double K_T = 0.35;
 
+
 //Motors and CS
 frc::Joystick stick0{0};
 frc::Joystick stick1{1};
@@ -61,8 +62,15 @@ frc::Solenoid clamp{0};
 frc::Solenoid pentTilt{1};
 TalonSRX PTO0 = {5};
 TalonSRX PTO1 = {9};
+TalonSRX pentacept0 = {7};
+TalonSRX pentacept1 = {8};
+frc::DigitalInput limTop{6};
+frc::DigitalInput limBottom{7};
 frc::Encoder PTO_Enc = {4, 5, frc::Encoder::EncodingType::k4X};
 frc::PowerDistributionPanel m_pdp;
+frc::Relay redLED{0};
+frc::Relay greenLED{1};
+frc::Relay blueLED{2};
 
 AHRS ahrs = {SerialPort::kMXP};
 
@@ -93,18 +101,7 @@ void Robot::RobotInit() {
 
 }
 
-void setLeftMotors(double speed){
-	driveLF.Set(ControlMode::PercentOutput, speed);
-	driveLR.Set(ControlMode::PercentOutput, speed);
-}
-
-void setRightMotors(double speed){
-	driveRF.Set(ControlMode::PercentOutput, speed);
-	driveRR.Set(ControlMode::PercentOutput, speed);
-}
-
 void TestPath(){
-	
 	//Path Generation
 	trajectory = NULL;
 	leftTrajectory = NULL;
@@ -114,8 +111,8 @@ void TestPath(){
 	const int POINT_LENGTH = 2;
 
 	Waypoint points[POINT_LENGTH];
-	Waypoint p1 = {0, 0, d2r(0)};
-	Waypoint p2 = {1, 0, d2r(0)};
+	Waypoint p1 = {0, 0, d2r(0)}; //X, Y, d2r(i) i = angle. Ex: 0, 9, d2r(90)
+	Waypoint p2 = {1, 0, d2r(0)}; 
 	points[0] = p1;
 	points[1] = p2;
 
@@ -144,7 +141,6 @@ void TestPath(){
 	//Current encoder positions
 	int currentLeftPos = driveLF.GetSelectedSensorPosition(0);
 	int currentRightPos = driveRF.GetSelectedSensorPosition(0);
-	printf("left encoder position %i, right encoder position %i", currentLeftPos, currentRightPos);
 
 	//path followers
 	double leftSide = pathfinder_follow_encoder(leftConfig, leftFollower, leftTrajectory, length, currentLeftPos);
@@ -171,36 +167,108 @@ void Robot::Autonomous() {
 	driveRF.SetNeutralMode(NeutralMode::Brake);
 	driveRR.SetNeutralMode(NeutralMode::Brake);
 	
+	frc::Wait(0.1); //Waits 1 second before running the path
+
 	//Runs a path that is 1ft in lenght straight
 	TestPath();
 }
 
 
 void Robot::OperatorControl() {
-	while (IsOperatorControl() && IsEnabled()) {
-		double leftStick = -stick0.GetY();
-		double rightStick = stick1.GetY();
+	double left;
+	double right;
+	PTO_Enc.Reset();
 
-		if(fabs(leftStick) > THRESHOLD){
-			driveLF.Set(ControlMode::PercentOutput, leftStick);
-			driveLR.Set(ControlMode::PercentOutput, leftStick);
+	while (IsOperatorControl() && IsEnabled()) {
+		 left = stick0.GetY() - stick0.GetX();
+		 right = stick0.GetY() + stick0.GetX();
+
+		//Driver 1
+		if(fabs(left) >= THRESHOLD){
+			driveLF.Set(ControlMode::PercentOutput, left);
+			driveLR.Set(ControlMode::PercentOutput, left);
 		}
 		else{
 			driveLR.Set(ControlMode::PercentOutput, 0);
 			driveLF.Set(ControlMode::PercentOutput, 0);
 		}
 		
-		if(fabs(rightStick) > THRESHOLD){
-			driveRF.Set(ControlMode::PercentOutput, rightStick);
-			driveRR.Set(ControlMode::PercentOutput, rightStick);
+		if(fabs(right) >= THRESHOLD){
+			driveRF.Set(ControlMode::PercentOutput, right);
+			driveRR.Set(ControlMode::PercentOutput, right);
 		}
 		else{
 			driveRR.Set(ControlMode::PercentOutput, 0);
 			driveRF.Set(ControlMode::PercentOutput, 0);
 		}
-		
-		frc::Wait(0.005);// The motors will be updated every 5ms
+
+		if(stick0.GetRawButton(5)){
+			redLED.Set(Relay::Value::kForward);
+		}
+		else{
+			redLED.Set(Relay::Value::kOff);
+		}
+
+		if(stick0.GetRawButton(2)){
+			greenLED.Set(Relay::Value::kForward);
+		}
+		else{
+			greenLED.Set(Relay::Value::kOff);
+		}
+
+		if(stick0.GetRawButton(6)){
+			blueLED.Set(Relay::Value::kForward);
+		}
+		else{
+			blueLED.Set(Relay::Value::kOff);
+		}
+
+		//Driver 2
+		if(stick1.GetRawButton(2)){
+			pentacept0.Set(ControlMode::PercentOutput, -1);
+			pentacept1.Set(ControlMode::PercentOutput, -1);
+		}
+		else if(stick1.GetRawButton(1)){
+			pentacept0.Set(ControlMode::PercentOutput, 1);
+			pentacept1.Set(ControlMode::PercentOutput, 1);
+		}
+		else if(stick1.GetRawButton(5)){
+			pentacept0.Set(ControlMode::PercentOutput, -0.4);
+			pentacept1.Set(ControlMode::PercentOutput, -0.4);
+		}
+		else{
+			pentacept0.Set(ControlMode::PercentOutput, 0.0);
+			pentacept1.Set(ControlMode::PercentOutput, 0.0);
+		}
+
+		if(stick1.GetRawButton(7)){
+			clamp.Set(true);
+			printf("Clamp Open\n");
+		}
+		else{
+			clamp.Set(false);
+		}
+
+		if(stick1.GetRawButton(7)){
+			pentTilt.Set(true);
+			printf("Tilt Open\n");
+		}
+		else{
+			clamp.Set(false);
+		}
+
+		printf("Left Encoder: %d\n", driveLF.GetSelectedSensorPosition(0));
+		printf("Right Encoder: %d\n", driveRF.GetSelectedSensorPosition(0));
+		printf("PTO Encoder: %d\n", PTO_Enc.Get());
+		printf("Top %i, Bottom %i\n", limTop.Get(), limBottom.Get());
+
+		frc::Wait(0.04);// The motors will be updated every 4ms
 	}
+
+	driveLF.SetNeutralMode(NeutralMode::Brake);
+	driveLR.SetNeutralMode(NeutralMode::Brake);
+	driveRF.SetNeutralMode(NeutralMode::Brake);
+	driveRR.SetNeutralMode(NeutralMode::Brake);
 }
 
 

@@ -6,7 +6,7 @@
 #include <frc/SampleRobot.h>
 #include <frc/drive/DifferentialDrive.h>
 #include <frc/smartdashboard/SendableChooser.h>
-#include "pathfinder.h"
+
 
 class Robot : public frc::SampleRobot {
   public:
@@ -19,11 +19,10 @@ class Robot : public frc::SampleRobot {
 
   private:
 
-      frc::SendableChooser<std::string> m_chooser;
-      const std::string kAutoNameDefault = "Default";
-      const std::string kAutoNameCustom = "My Auto";
+    frc::SendableChooser<std::string> m_chooser;
+    const std::string kAutoNameDefault = "Default";
+    const std::string kAutoNameCustom = "My Auto";
 
-    Segment trajStraight[1024];
-    int lenghtStraight = 0;
+    
 
 };
