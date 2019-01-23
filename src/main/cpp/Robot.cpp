@@ -11,7 +11,10 @@
 #include "ctre/phoenix/MotorControl/FeedbackDevice.h"
 #include "AHRS.h"
 #include "pathfinder.h"
-#include <WPILib.h>
+#include <frc/WPILib.h>
+#include <string>
+
+using namespace std;
 
 Robot::Robot() {
 	
@@ -25,31 +28,27 @@ const bool BOTTOM = false;
 const bool OPEN = true;
 const bool CLOSED = false;
 
-//Pathfinding Varibles
-const double TIMESTEP = 0.02;
-const double MAX_VEL = 18;
-const double MAX_ACCEL = 12;
-const double MAX_JERK = 60;
-const double WHEEL_CIRCUMFERENCE = 13.8;
-double Wheel_Base_Width = 30;
-TrajectoryCandidate candidate;
-Segment* trajectory;
-Segment* leftTrajectory;
-Segment* rightTrajectory;
-int length;
-EncoderFollower* leftFollower = (EncoderFollower*)malloc(sizeof(EncoderFollower)); 
+static const int k_ticks_per_rev = 1024;
+static const int k_wheel_diameter = 6;
+static const double k_max_velocity = 0.2;
+
+
+EncoderFollower* leftFollower = (EncoderFollower*)malloc(sizeof(EncoderFollower));
 EncoderFollower* rightFollower = (EncoderFollower*)malloc(sizeof(EncoderFollower));
 EncoderConfig leftConfig;
 EncoderConfig rightConfig;
-//Encoder Config Varibles
-const int TICKS_PER_REV = 26214;
-const double K_P = 1.0;
-const double K_I = 0.0;
-const double K_D = 0.15;
-const double K_V = 0.06;
-const double K_A = 0.0856;
-const double K_T = 0.35;
 
+bool Notfollow = true;
+
+int right_length = 0;
+int left_length = 0;
+
+int leftPosition = 0;
+int rightPosition = 0;
+
+
+Segment* leftTrajectory;
+Segment* rightTrajectory;
 
 //Motors and CS
 frc::Joystick stick0{0};
@@ -99,66 +98,208 @@ void Robot::RobotInit() {
 	driveLF.SetInverted(true);
 	driveLR.SetInverted(true);
 
+	driveLF.SetSelectedSensorPosition(0, 0, 0);
+	driveRF.SetSelectedSensorPosition(0, 0, 0);
+
+
+	std::cout << "Robot Initialized!\n" << endl;
+
+}
+double Map(double x, double in_min, double in_max, double out_min, double out_max){//This function scales one value to a set range
+		return ((x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min);
+	}
+
+void SetSpeed(double left, double right){
+	driveLR.Follow(driveLF);
+	driveRR.Follow(driveRF);
+
+	driveLF.Set(ControlMode::PercentOutput, left);
+
+	driveRF.Set(ControlMode::PercentOutput, right);
+}
+
+void PIDTurn(int angle, double timeOut){ //Positive number for clockwise, Negative for anti-clockwise
+		ahrs.Reset();
+		Timer t1;
+		t1.Get();
+		t1.Reset();
+		t1.Start();
+
+		frc::Wait(0.25);
+
+
+		double errorPrior = 0;//Error from previous cycle starts at 0 since no previous cycle
+		double integral = 0;//Integral starts at 0 since that's how integral work
+		double derivative = 0;//Derivative technically doesn't need to be instantiated before the loop, I just thought it looked nicer up here
+		double iterationTime = 0.1;//Time in seconds each iteration of the loop should take
+		int timeBuffer = 0;
+
+		double kP = 4;//Proportional Component's Tunable Value 	-45 = 0.5	-90 = 0.5
+		double kI = 0.25;//Integral Component's Tunable Value 		-45 = 0.5	-90 = 1.0
+		double kD = 0.1;//Derivative Component's Tunable Value 		-45 = 0	1	-90 = 0.3
+
+		double error = angle - ahrs.GetYaw();
+		double output;
+
+		while(timeBuffer < 5 && t1.Get() < timeOut){//Need to find a stop condition
+			error = angle - ahrs.GetYaw();//Error = Final - Current
+
+			printf("Timer %f\n", t1.Get());
+
+			integral = integral + (error*iterationTime);//Integral is summing the value of all previous errors to eliminate steady state error
+			derivative = (error - errorPrior)/iterationTime;//Derivative checks the instantaneous velocity of the error to increase stability
+
+			output = (kP * error) + (kI * integral) + (kD * derivative);//Sum all components together
+			output = Map(output, -angle, angle, -0.7, 0.7);
+
+			if(angle < 0){
+				SetSpeed(output, -output);
+			}
+			else if(angle > 0){
+				SetSpeed(-output, output);
+			}
+			else{
+				printf("Angle = 0");
+			}
+
+			if(fabs(error) < 3){
+				timeBuffer++;
+			}
+			else{
+				timeBuffer = 0;
+			}
+
+			errorPrior = error;//Set previous error to this iterations error for next time
+
+			SmartDashboard::PutNumber("Proportional", kP * error);
+			SmartDashboard::PutNumber("Integral", integral);
+			SmartDashboard::PutNumber("Derivative", derivative);
+			SmartDashboard::PutNumber("Output", output);
+			SmartDashboard::PutNumber("Error", error);
+			SmartDashboard::PutNumber("Setpoint", angle);
+			SmartDashboard::PutNumber("Current Angle", ahrs.GetYaw());
+
+			Wait(iterationTime);//Wait the iteration time
+		}
+
+		SetSpeed(0.0, 0.0);
+
+		printf("PID Complete\n");
+	}
+
+double GetAdjustedYaw(){
+	double yawOffset = 0;
+	ahrs.Reset();
+	double ahrsYaw = ahrs.GetYaw();
+	double calculatedOffset = ahrsYaw + yawOffset;
+
+	if(calculatedOffset >= 180)
+	{
+		calculatedOffset = calculatedOffset - 180;
+	}
+
+	return calculatedOffset;
 }
 
 void TestPath(){
-	//Path Generation
-	trajectory = NULL;
-	leftTrajectory = NULL;
-	rightTrajectory = NULL;
-	length = 0;
+	driveLF.SetSelectedSensorPosition(0, 0, 0);
+	driveRF.SetSelectedSensorPosition(0, 0, 0);
 
-	const int POINT_LENGTH = 2;
+	ahrs.Reset();
+	std::cout << "Started the thing\n" << endl;
+int POINT_LENGTH = 2;
 
-	Waypoint points[POINT_LENGTH];
-	Waypoint p1 = {0, 0, d2r(0)}; //X, Y, d2r(i) i = angle. Ex: 0, 9, d2r(90)
-	Waypoint p2 = {1, 0, d2r(0)}; 
-	points[0] = p1;
-	points[1] = p2;
+Waypoint *points = (Waypoint*)malloc(sizeof(Waypoint) * POINT_LENGTH);
 
-	pathfinder_prepare(points, POINT_LENGTH, FIT_HERMITE_CUBIC, PATHFINDER_SAMPLES_HIGH, TIMESTEP, MAX_VEL, MAX_ACCEL, MAX_JERK, &candidate);
-	length = candidate.length;
-	trajectory = (Segment*)malloc(length * sizeof(Segment));
-	pathfinder_generate(&candidate, trajectory);
+Waypoint p1 = { 0, 0, d2r(0)};      
+Waypoint p2 = { 1, 0, d2r(0)};             
+points[0] = p1;
+points[1] = p2;
 
-	//Modify for tank drive base
-	leftTrajectory = (Segment*)malloc(length * sizeof(Segment));
-	rightTrajectory = (Segment*)malloc(length * sizeof(Segment));
+TrajectoryCandidate candidate;
 
-	pathfinder_modify_tank(trajectory, length, leftTrajectory, rightTrajectory, Wheel_Base_Width);
+pathfinder_prepare(points, POINT_LENGTH, FIT_HERMITE_CUBIC, PATHFINDER_SAMPLES_LOW, 0.005, 1.0, 2.0, 60.0, &candidate);
+free(points);
+int length = candidate.length;
 
-	leftConfig = {driveLF.GetSelectedSensorPosition(0), TICKS_PER_REV, WHEEL_CIRCUMFERENCE, K_P, K_I, K_D, K_V, K_A};
-	rightConfig = {driveRF.GetSelectedSensorPosition(0), TICKS_PER_REV, WHEEL_CIRCUMFERENCE, K_P, K_I, K_D, K_V, K_A};
+// Array of Segments (the trajectory points) to store the trajectory in
+Segment* trajectory = (Segment*)malloc(length * sizeof(Segment));
 
-	leftFollower->last_error = 0;
-	leftFollower->segment = 0;
-	leftFollower->finished = 0;
-
-	rightFollower->last_error = 0;
-	rightFollower->segment = 0;
-	rightFollower->finished = 0;
-
-	//Current encoder positions
-	int currentLeftPos = driveLF.GetSelectedSensorPosition(0);
-	int currentRightPos = driveRF.GetSelectedSensorPosition(0);
-
-	//path followers
-	double leftSide = pathfinder_follow_encoder(leftConfig, leftFollower, leftTrajectory, length, currentLeftPos);
-	double rightSide = pathfinder_follow_encoder(rightConfig, rightFollower, rightTrajectory, length, currentRightPos);
-
-	//gyro calculations
-	double currentYaw = ahrs.GetYaw();
-	double desired_heading = r2d(leftFollower->heading);
-	double angleDifference = r2d(leftFollower->heading) - currentYaw;
-	double turn = K_T * angleDifference;
-
-	//Set the motors to the path
-	driveLF.Set(ControlMode::PercentOutput, leftSide + turn);
-	driveLR.Set(ControlMode::PercentOutput, leftSide + turn);
-
-	driveRF.Set(ControlMode::PercentOutput, rightSide - turn);
-	driveRR.Set(ControlMode::PercentOutput, rightSide - turn);
+// Generate the trajectory
+int result = pathfinder_generate(&candidate, trajectory);
+if (result < 0) {
+    // An error occured
+    std::cout << "Uh-Oh! Trajectory could not be generated!\n" << endl;
+} else{
+	std::cout << "Trajectory Generated\n" << endl;
 }
+
+Segment* lTrajectory = (Segment*)malloc(length * sizeof(Segment));
+Segment* rTrajectory = (Segment*)malloc(length * sizeof(Segment));
+// The distance between the left and right sides of the wheelbase is 0.6m
+double wheelbase_width = 0.6;
+std::cout << "about to run the modifier\n" << endl;
+// Generate the Left and Right trajectories of the wheelbase using the 
+// originally generated trajectory
+pathfinder_modify_tank(trajectory, candidate.length, lTrajectory, rTrajectory, wheelbase_width);
+std::cout << "Ran modifier\n" << endl;
+
+std::cout << "About to start encoder follower\n" << endl;
+
+leftFollower->last_error = 0;
+leftFollower->segment = 0;
+leftFollower->finished = 0;
+std::cout << "Finished the left encoder follower\n" << endl;
+
+rightFollower->last_error = 0;
+rightFollower->segment = 0;
+rightFollower->finished = 0;
+std::cout << "Finished the right encoder follower\n" << endl;
+
+int leftPosition = driveLF.GetSelectedSensorPosition(0);
+int rightPosition = driveRF.GetSelectedSensorPosition(0);
+
+double wheel_cir = 18.85; 
+
+std::cout << "About to start the encoder configs\n" << endl;
+leftConfig = {leftPosition, 1440, wheel_cir, 0.8, 0.0, 0.0, 0.2 / k_max_velocity, 0.0};
+std::cout << "Finished left config\n" << endl;
+
+rightConfig = {rightPosition, 1440, wheel_cir, 0.8, 0.0, 0.0, 0.2 / k_max_velocity, 0.0};
+std::cout << "Finished right config\n" << endl;
+
+double l = pathfinder_follow_encoder(leftConfig, leftFollower, lTrajectory, candidate.length, leftPosition);
+double r = pathfinder_follow_encoder(rightConfig, rightFollower, rTrajectory, candidate.length, rightPosition);
+
+std::cout << "Started to set up gyro\n" << endl;
+
+//double currentYaw = GetAdjustedYaw();
+double currentYaw = ahrs.GetYaw();
+double desired_heading = r2d(leftFollower->heading);
+double angle_diffrence = r2d(leftFollower->heading) - currentYaw;
+const double K_T = 0.35;
+double turn = K_T * angle_diffrence;
+
+
+std::cout << "Gyro Setup Complete\n" << endl;
+
+std::cout << "Setting Motors to path\n" << endl;
+
+driveLR.Set(ControlMode::PercentOutput, l + turn);
+driveLF.Set(ControlMode::PercentOutput, l + turn);
+
+driveRR.Set(ControlMode::PercentOutput, r - turn);
+driveRF.Set(ControlMode::PercentOutput, r - turn);
+
+frc::Wait(0.005);
+
+free(trajectory);
+free(lTrajectory);
+free(rTrajectory);
+free(leftFollower);
+free(rightFollower);
+}
+
 
 
 void Robot::Autonomous() {
@@ -167,14 +308,13 @@ void Robot::Autonomous() {
 	driveRF.SetNeutralMode(NeutralMode::Brake);
 	driveRR.SetNeutralMode(NeutralMode::Brake);
 	
-	frc::Wait(0.1); //Waits 1 second before running the path
-
-	//Runs a path that is 1ft in lenght straight
 	TestPath();
 }
 
 
 void Robot::OperatorControl() {
+
+
 	double left;
 	double right;
 	PTO_Enc.Reset();
@@ -182,6 +322,23 @@ void Robot::OperatorControl() {
 	while (IsOperatorControl() && IsEnabled()) {
 		 left = stick0.GetY() - stick0.GetX();
 		 right = stick0.GetY() + stick0.GetX();
+
+
+		if(stick1.GetY() >= THRESHOLD && limTop.Get()){//Upper limits
+				printf("Stick1 Y = %f\n", stick1.GetY());
+				PTO0.Set(ControlMode::PercentOutput, stick1.GetY());
+				PTO1.Set(ControlMode::PercentOutput, stick1.GetY());
+			}
+			else if(stick1.GetY() <= -THRESHOLD && limBottom.Get()){//Lower limits
+				printf("Stick1 Y = %f\n", stick1.GetY());
+				PTO0.Set(ControlMode::PercentOutput, stick1.GetY());
+				PTO1.Set(ControlMode::PercentOutput, stick1.GetY());
+			}
+			else{
+				PTO0.Set(ControlMode::PercentOutput, 0.1);
+				PTO1.Set(ControlMode::PercentOutput, 0.1);
+			}
+
 
 		//Driver 1
 		if(fabs(left) >= THRESHOLD){
@@ -241,7 +398,7 @@ void Robot::OperatorControl() {
 			pentacept1.Set(ControlMode::PercentOutput, 0.0);
 		}
 
-		if(stick1.GetRawButton(7)){
+		/*if(stick1.GetRawButton(5)){
 			clamp.Set(true);
 			printf("Clamp Open\n");
 		}
@@ -255,14 +412,14 @@ void Robot::OperatorControl() {
 		}
 		else{
 			clamp.Set(false);
-		}
+		}*/
 
 		printf("Left Encoder: %d\n", driveLF.GetSelectedSensorPosition(0));
 		printf("Right Encoder: %d\n", driveRF.GetSelectedSensorPosition(0));
 		printf("PTO Encoder: %d\n", PTO_Enc.Get());
 		printf("Top %i, Bottom %i\n", limTop.Get(), limBottom.Get());
 
-		frc::Wait(0.04);// The motors will be updated every 4ms
+		frc::Wait(0.004);// The motors will be updated every 4ms
 	}
 
 	driveLF.SetNeutralMode(NeutralMode::Brake);
