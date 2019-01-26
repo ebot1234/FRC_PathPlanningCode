@@ -10,9 +10,10 @@
 #include "ctre/phoenix/MotorControl/NeutralMode.h"
 #include "ctre/phoenix/MotorControl/FeedbackDevice.h"
 #include "AHRS.h"
-#include "pathfinder.h"
+#include <pathfinder.h>
 #include <frc/WPILib.h>
 #include <string>
+
 
 using namespace std;
 
@@ -32,23 +33,6 @@ static const int k_ticks_per_rev = 1024;
 static const int k_wheel_diameter = 6;
 static const double k_max_velocity = 0.2;
 
-
-EncoderFollower* leftFollower = (EncoderFollower*)malloc(sizeof(EncoderFollower));
-EncoderFollower* rightFollower = (EncoderFollower*)malloc(sizeof(EncoderFollower));
-EncoderConfig leftConfig;
-EncoderConfig rightConfig;
-
-bool Notfollow = true;
-
-int right_length = 0;
-int left_length = 0;
-
-int leftPosition = 0;
-int rightPosition = 0;
-
-
-Segment* leftTrajectory;
-Segment* rightTrajectory;
 
 //Motors and CS
 frc::Joystick stick0{0};
@@ -187,21 +171,13 @@ void PIDTurn(int angle, double timeOut){ //Positive number for clockwise, Negati
 		printf("PID Complete\n");
 	}
 
-double GetAdjustedYaw(){
-	double yawOffset = 0;
-	ahrs.Reset();
-	double ahrsYaw = ahrs.GetYaw();
-	double calculatedOffset = ahrsYaw + yawOffset;
+void TestPath(int timeOut){
+	Timer t1;
+	t1.Get();
+	t1.Reset();
+	t1.Start();
 
-	if(calculatedOffset >= 180)
-	{
-		calculatedOffset = calculatedOffset - 180;
-	}
 
-	return calculatedOffset;
-}
-
-void TestPath(){
 	driveLF.SetSelectedSensorPosition(0, 0, 0);
 	driveRF.SetSelectedSensorPosition(0, 0, 0);
 
@@ -246,6 +222,9 @@ std::cout << "Ran modifier\n" << endl;
 
 std::cout << "About to start encoder follower\n" << endl;
 
+EncoderFollower* leftFollower = (EncoderFollower*)malloc(sizeof(EncoderFollower));
+EncoderFollower* rightFollower = (EncoderFollower*)malloc(sizeof(EncoderFollower));
+
 leftFollower->last_error = 0;
 leftFollower->segment = 0;
 leftFollower->finished = 0;
@@ -262,44 +241,74 @@ int rightPosition = driveRF.GetSelectedSensorPosition(0);
 double wheel_cir = 18.85; 
 
 std::cout << "About to start the encoder configs\n" << endl;
+
+EncoderConfig leftConfig;
 leftConfig = {leftPosition, 1440, wheel_cir, 0.8, 0.0, 0.0, 0.2 / k_max_velocity, 0.0};
 std::cout << "Finished left config\n" << endl;
 
+EncoderConfig rightConfig;
 rightConfig = {rightPosition, 1440, wheel_cir, 0.8, 0.0, 0.0, 0.2 / k_max_velocity, 0.0};
 std::cout << "Finished right config\n" << endl;
 
-double l = pathfinder_follow_encoder(leftConfig, leftFollower, lTrajectory, candidate.length, leftPosition);
-double r = pathfinder_follow_encoder(rightConfig, rightFollower, rTrajectory, candidate.length, rightPosition);
-
-std::cout << "Started to set up gyro\n" << endl;
-
-//double currentYaw = GetAdjustedYaw();
-double currentYaw = ahrs.GetYaw();
-double desired_heading = r2d(leftFollower->heading);
-double angle_diffrence = r2d(leftFollower->heading) - currentYaw;
-const double K_T = 0.35;
-double turn = K_T * angle_diffrence;
 
 
-std::cout << "Gyro Setup Complete\n" << endl;
+while(t1.Get() < timeOut){
 
-std::cout << "Setting Motors to path\n" << endl;
+		double l = pathfinder_follow_encoder(leftConfig, leftFollower, lTrajectory, candidate.length, leftPosition);
+		double r = pathfinder_follow_encoder(rightConfig, rightFollower, rTrajectory, candidate.length, rightPosition);
 
-driveLR.Set(ControlMode::PercentOutput, l + turn);
-driveLF.Set(ControlMode::PercentOutput, l + turn);
+		printf("Left Percent Values %f", l);
+		printf("Right Percent Values %f", r);
 
-driveRR.Set(ControlMode::PercentOutput, r - turn);
-driveRF.Set(ControlMode::PercentOutput, r - turn);
+		std::cout << "Started to set up gyro\n" << endl;
 
-frc::Wait(0.005);
+		//double currentYaw = GetAdjustedYaw();
+		double currentYaw = ahrs.GetYaw();
+		double desired_heading = r2d(leftFollower->heading);
+		double angle_diffrence = r2d(leftFollower->heading) - currentYaw;
+		const double K_T = 0.35;
+		double turn = K_T * angle_diffrence;
 
-free(trajectory);
-free(lTrajectory);
-free(rTrajectory);
-free(leftFollower);
-free(rightFollower);
+
+		std::cout << "Gyro Setup Complete\n" << endl;
+
+		std::cout << "Setting Motors to path\n" << endl;
+
+		driveLR.Set(ControlMode::PercentOutput, l + turn);
+		driveLF.Set(ControlMode::PercentOutput, l + turn);
+
+		driveRR.Set(ControlMode::PercentOutput, r - turn);
+		driveRF.Set(ControlMode::PercentOutput, r - turn);
+
+		frc::SmartDashboard.PutNumber("Left Output: ", l + turn);
+		frc::SmartDashboard.PutNumber("Right Output: ", r - turn);
+
+	}
+
+	std::cout << "Path End\n" << endl;
+
+	frc::Wait(0.005);
+
+	free(trajectory);
+	free(lTrajectory);
+	free(rTrajectory);
+	free(leftFollower);
+	free(rightFollower);
 }
 
+double GetAdjustedYaw(){
+	double yawOffset = 0;
+	ahrs.Reset();
+	double ahrsYaw = ahrs.GetYaw();
+	double calculatedOffset = ahrsYaw + yawOffset;
+
+	if(calculatedOffset >= 180)
+	{
+		calculatedOffset = calculatedOffset - 180;
+	}
+
+	return calculatedOffset;
+}
 
 
 void Robot::Autonomous() {
@@ -308,7 +317,7 @@ void Robot::Autonomous() {
 	driveRF.SetNeutralMode(NeutralMode::Brake);
 	driveRR.SetNeutralMode(NeutralMode::Brake);
 	
-	TestPath();
+	TestPath(10);
 }
 
 
