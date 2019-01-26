@@ -269,7 +269,6 @@ while(t1.Get() < timeOut){
 		const double K_T = 0.35;
 		double turn = K_T * angle_diffrence;
 
-
 		std::cout << "Gyro Setup Complete\n" << endl;
 
 		std::cout << "Setting Motors to path\n" << endl;
@@ -280,8 +279,8 @@ while(t1.Get() < timeOut){
 		driveRR.Set(ControlMode::PercentOutput, r - turn);
 		driveRF.Set(ControlMode::PercentOutput, r - turn);
 
-		frc::SmartDashboard.PutNumber("Left Output: ", l + turn);
-		frc::SmartDashboard.PutNumber("Right Output: ", r - turn);
+		printf("Left Motors %f", l + turn);
+		printf("Right Motors %f", r - turn);
 
 	}
 

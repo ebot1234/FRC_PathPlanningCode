@@ -1,5 +1,5 @@
 See file:///C:/Users/ellen.estep.one/Documents/FRC_PathPlanningCode/build/tmp/compileFrcUserProgramDebugExecutableFrcUserProgramCpp/output.txt for all output for compileFrcUserProgramDebugExecutableFrcUserProgramCpp.
-compiling Robot.cpp failed.
+compiling Robot.cpp successful.
 C:\Users\ellen.estep.one\Documents\FRC_PathPlanningCode\src\main\cpp\Robot.cpp: In constructor 'Robot::Robot()':
 C:\Users\ellen.estep.one\Documents\FRC_PathPlanningCode\src\main\cpp\Robot.cpp:20:14: warning: 'frc::SampleRobot::SampleRobot()' is deprecated: WARNING: While it may look like a good choice to use for your code if you're inexperienced, don't. Unless you know what you are doing, complex code will be much more difficult under this system. Use TimedRobot or Command-Based instead. [-Wdeprecated-declarations]
  Robot::Robot() {
@@ -9,12 +9,5 @@ In file included from C:\Users\ellen.estep.one\Documents\FRC_PathPlanningCode\sr
 C:\Users\ellen.estep.one\Documents\FRC_PathPlanningCode\build\tmp\expandedArchives\wpilibc-cpp-2019.1.1-headers.zip_bbc5901b0e22ac527e7d642f2ec68009/frc/SampleRobot.h:99:3: note: declared here
    SampleRobot();
    ^~~~~~~~~~~
-C:\Users\ellen.estep.one\Documents\FRC_PathPlanningCode\src\main\cpp\Robot.cpp: In function 'void TestPath(int)':
-C:\Users\ellen.estep.one\Documents\FRC_PathPlanningCode\src\main\cpp\Robot.cpp:283:22: error: expected unqualified-id before '.' token
-   frc::SmartDashboard.PutNumber("Left Output: ", l + turn);
-                      ^
-C:\Users\ellen.estep.one\Documents\FRC_PathPlanningCode\src\main\cpp\Robot.cpp:284:22: error: expected unqualified-id before '.' token
-   frc::SmartDashboard.PutNumber("Right Output: ", r - turn);
-                      ^
 
 Finished compileFrcUserProgramDebugExecutableFrcUserProgramCpp, see full log file:///C:/Users/ellen.estep.one/Documents/FRC_PathPlanningCode/build/tmp/compileFrcUserProgramDebugExecutableFrcUserProgramCpp/output.txt.
