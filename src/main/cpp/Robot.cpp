@@ -289,7 +289,7 @@ while(t1.Get() < timeOut){
 
 	std::cout << "Path End\n" << endl;
 
-	frc::Wait(0.005);
+	frc::Wait(0.1);
 
 	free(trajectory);
 	free(lTrajectory);
