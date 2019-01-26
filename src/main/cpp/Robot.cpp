@@ -30,7 +30,7 @@ const bool CLOSED = false;
 
 static const int k_ticks_per_rev = 1024;
 static const int k_wheel_diameter = 6;
-static const double k_max_velocity = 0.2;
+static const double k_max_velocity = 10;
 
 
 //Motors and CS
@@ -250,7 +250,7 @@ leftConfig = {driveLF.GetSelectedSensorPosition(0), k_ticks_per_rev, wheel_cir, 
 std::cout << "Finished left config\n" << endl;
 
 EncoderConfig rightConfig;
-rightConfig = {driveRF.GetSelectedSensorPosition(0), k_max_velocity, wheel_cir, 1.0, 0.0, 0.0, 1.0 / k_max_velocity, 0.0};
+rightConfig = {driveRF.GetSelectedSensorPosition(0), k_ticks_per_rev, wheel_cir, 1.0, 0.0, 0.0, 1.0 / k_max_velocity, 0.0};
 std::cout << "Finished right config\n" << endl;
 
 
@@ -263,7 +263,7 @@ while(t1.Get() < timeOut){
 		printf("Left Percent Encoder %f", l);
 		printf("Right Percent Encoder %f", r);
 
-		std::cout << "Started to set up gyro\n" << endl;
+		std::cout << "Gyro Config\n" << endl;
 
 		//double currentYaw = GetAdjustedYaw();
 		double currentYaw = ahrs.GetYaw();
@@ -272,7 +272,7 @@ while(t1.Get() < timeOut){
 		const double K_T = 0.35;
 		double turn = K_T * angle_diffrence;
 
-		std::cout << "Gyro Setup Complete\n" << endl;
+		std::cout << "Gyro Config Complete\n" << endl;
 
 		std::cout << "Setting Motors to path\n" << endl;
 
@@ -321,7 +321,7 @@ void Robot::Autonomous() {
 	driveRF.SetNeutralMode(NeutralMode::Brake);
 	driveRR.SetNeutralMode(NeutralMode::Brake);
 	
-	TestPath(10);
+	TestPath(1);
 }
 
 

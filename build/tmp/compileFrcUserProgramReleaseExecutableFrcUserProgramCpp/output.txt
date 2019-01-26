@@ -9,9 +9,5 @@ In file included from C:\Users\ellen.estep.one\Documents\FRC_PathPlanningCode\sr
 C:\Users\ellen.estep.one\Documents\FRC_PathPlanningCode\build\tmp\expandedArchives\wpilibc-cpp-2019.1.1-headers.zip_bbc5901b0e22ac527e7d642f2ec68009/frc/SampleRobot.h:99:3: note: declared here
    SampleRobot();
    ^~~~~~~~~~~
-C:\Users\ellen.estep.one\Documents\FRC_PathPlanningCode\src\main\cpp\Robot.cpp: In function 'void TestPath(int)':
-C:\Users\ellen.estep.one\Documents\FRC_PathPlanningCode\src\main\cpp\Robot.cpp:253:121: warning: narrowing conversion of '(double)k_max_velocity' from 'double' to 'int' inside { } [-Wnarrowing]
- rightConfig = {driveRF.GetSelectedSensorPosition(0), k_max_velocity, wheel_cir, 1.0, 0.0, 0.0, 1.0 / k_max_velocity, 0.0};
-                                                                                                                         ^
 
 Finished compileFrcUserProgramReleaseExecutableFrcUserProgramCpp, see full log file:///C:/Users/ellen.estep.one/Documents/FRC_PathPlanningCode/build/tmp/compileFrcUserProgramReleaseExecutableFrcUserProgramCpp/output.txt.
