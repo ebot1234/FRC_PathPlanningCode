@@ -1,7 +1,7 @@
 See file:///C:/Users/ellen.estep.one/Documents/FRC_PathPlanningCode/build/tmp/compileFrcUserProgramReleaseExecutableFrcUserProgramCpp/output.txt for all output for compileFrcUserProgramReleaseExecutableFrcUserProgramCpp.
 compiling Robot.cpp successful.
 C:\Users\ellen.estep.one\Documents\FRC_PathPlanningCode\src\main\cpp\Robot.cpp: In constructor 'Robot::Robot()':
-C:\Users\ellen.estep.one\Documents\FRC_PathPlanningCode\src\main\cpp\Robot.cpp:20:14: warning: 'frc::SampleRobot::SampleRobot()' is deprecated: WARNING: While it may look like a good choice to use for your code if you're inexperienced, don't. Unless you know what you are doing, complex code will be much more difficult under this system. Use TimedRobot or Command-Based instead. [-Wdeprecated-declarations]
+C:\Users\ellen.estep.one\Documents\FRC_PathPlanningCode\src\main\cpp\Robot.cpp:19:14: warning: 'frc::SampleRobot::SampleRobot()' is deprecated: WARNING: While it may look like a good choice to use for your code if you're inexperienced, don't. Unless you know what you are doing, complex code will be much more difficult under this system. Use TimedRobot or Command-Based instead. [-Wdeprecated-declarations]
  Robot::Robot() {
               ^
 In file included from C:\Users\ellen.estep.one\Documents\FRC_PathPlanningCode\src\main\include/Robot.h:6:0,
@@ -9,5 +9,9 @@ In file included from C:\Users\ellen.estep.one\Documents\FRC_PathPlanningCode\sr
 C:\Users\ellen.estep.one\Documents\FRC_PathPlanningCode\build\tmp\expandedArchives\wpilibc-cpp-2019.1.1-headers.zip_bbc5901b0e22ac527e7d642f2ec68009/frc/SampleRobot.h:99:3: note: declared here
    SampleRobot();
    ^~~~~~~~~~~
+C:\Users\ellen.estep.one\Documents\FRC_PathPlanningCode\src\main\cpp\Robot.cpp: In function 'void TestPath(int)':
+C:\Users\ellen.estep.one\Documents\FRC_PathPlanningCode\src\main\cpp\Robot.cpp:253:121: warning: narrowing conversion of '(double)k_max_velocity' from 'double' to 'int' inside { } [-Wnarrowing]
+ rightConfig = {driveRF.GetSelectedSensorPosition(0), k_max_velocity, wheel_cir, 1.0, 0.0, 0.0, 1.0 / k_max_velocity, 0.0};
+                                                                                                                         ^
 
 Finished compileFrcUserProgramReleaseExecutableFrcUserProgramCpp, see full log file:///C:/Users/ellen.estep.one/Documents/FRC_PathPlanningCode/build/tmp/compileFrcUserProgramReleaseExecutableFrcUserProgramCpp/output.txt.

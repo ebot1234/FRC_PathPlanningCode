@@ -14,7 +14,6 @@
 #include <frc/WPILib.h>
 #include <string>
 
-
 using namespace std;
 
 Robot::Robot() {
@@ -82,11 +81,18 @@ void Robot::RobotInit() {
 	driveLF.SetInverted(true);
 	driveLR.SetInverted(true);
 
+	driveLF.ConfigSelectedFeedbackSensor(FeedbackDevice::QuadEncoder, 0, 0);
+	driveLF.SetSensorPhase(true);
+
+	driveRF.ConfigSelectedFeedbackSensor(FeedbackDevice::QuadEncoder, 0, 0);
+	driveRF.SetSensorPhase(true);
+
 	driveLF.SetSelectedSensorPosition(0, 0, 0);
 	driveRF.SetSelectedSensorPosition(0, 0, 0);
 
+	frc::CameraServer::GetInstance()->StartAutomaticCapture();
 
-	std::cout << "Robot Initialized!\n" << endl;
+	std::cout << "Robot is ready for the stuff!\n" << endl;
 
 }
 double Map(double x, double in_min, double in_max, double out_min, double out_max){//This function scales one value to a set range
@@ -194,7 +200,7 @@ points[1] = p2;
 
 TrajectoryCandidate candidate;
 
-pathfinder_prepare(points, POINT_LENGTH, FIT_HERMITE_CUBIC, PATHFINDER_SAMPLES_LOW, 0.005, 1.0, 2.0, 60.0, &candidate);
+pathfinder_prepare(points, POINT_LENGTH, FIT_HERMITE_CUBIC, PATHFINDER_SAMPLES_HIGH, 0.001, 15.0, 10.0, 60.0, &candidate);
 free(points);
 int length = candidate.length;
 
@@ -209,7 +215,6 @@ if (result < 0) {
 } else{
 	std::cout << "Trajectory Generated\n" << endl;
 }
-
 Segment* lTrajectory = (Segment*)malloc(length * sizeof(Segment));
 Segment* rTrajectory = (Segment*)malloc(length * sizeof(Segment));
 // The distance between the left and right sides of the wheelbase is 0.6m
@@ -235,30 +240,28 @@ rightFollower->segment = 0;
 rightFollower->finished = 0;
 std::cout << "Finished the right encoder follower\n" << endl;
 
-int leftPosition = driveLF.GetSelectedSensorPosition(0);
-int rightPosition = driveRF.GetSelectedSensorPosition(0);
 
-double wheel_cir = 18.85; 
+double wheel_cir = 18.84956; 
 
 std::cout << "About to start the encoder configs\n" << endl;
 
 EncoderConfig leftConfig;
-leftConfig = {leftPosition, 1440, wheel_cir, 0.8, 0.0, 0.0, 0.2 / k_max_velocity, 0.0};
+leftConfig = {driveLF.GetSelectedSensorPosition(0), k_ticks_per_rev, wheel_cir, 1.0, 0.0, 0.0, 1.0 / k_max_velocity, 0.0};
 std::cout << "Finished left config\n" << endl;
 
 EncoderConfig rightConfig;
-rightConfig = {rightPosition, 1440, wheel_cir, 0.8, 0.0, 0.0, 0.2 / k_max_velocity, 0.0};
+rightConfig = {driveRF.GetSelectedSensorPosition(0), k_max_velocity, wheel_cir, 1.0, 0.0, 0.0, 1.0 / k_max_velocity, 0.0};
 std::cout << "Finished right config\n" << endl;
 
 
 
 while(t1.Get() < timeOut){
 
-		double l = pathfinder_follow_encoder(leftConfig, leftFollower, lTrajectory, candidate.length, leftPosition);
-		double r = pathfinder_follow_encoder(rightConfig, rightFollower, rTrajectory, candidate.length, rightPosition);
+		double l = pathfinder_follow_encoder(leftConfig, leftFollower, lTrajectory, candidate.length, driveLF.GetSelectedSensorPosition(0));
+		double r = pathfinder_follow_encoder(rightConfig, rightFollower, rTrajectory, candidate.length, driveRF.GetSelectedSensorPosition(0));
 
-		printf("Left Percent Values %f", l);
-		printf("Right Percent Values %f", r);
+		printf("Left Percent Encoder %f", l);
+		printf("Right Percent Encoder %f", r);
 
 		std::cout << "Started to set up gyro\n" << endl;
 
@@ -279,8 +282,8 @@ while(t1.Get() < timeOut){
 		driveRR.Set(ControlMode::PercentOutput, r - turn);
 		driveRF.Set(ControlMode::PercentOutput, r - turn);
 
-		printf("Left Motors %f", l + turn);
-		printf("Right Motors %f", r - turn);
+		printf("Left Motors %f\n", l + turn);
+		printf("Right Motors %f\n", r - turn);
 
 	}
 
@@ -293,6 +296,8 @@ while(t1.Get() < timeOut){
 	free(rTrajectory);
 	free(leftFollower);
 	free(rightFollower);
+
+	std::cout << "Free'd the trajectories and follower\n" << endl;
 }
 
 double GetAdjustedYaw(){
