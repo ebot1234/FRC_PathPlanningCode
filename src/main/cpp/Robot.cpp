@@ -11,7 +11,7 @@
 #include "ctre/phoenix/MotorControl/FeedbackDevice.h"
 #include "AHRS.h"
 #include <pathfinder.h>
-#include <frc/WPILib.h>
+#include <WPILib.h>
 #include <string>
 
 using namespace std;
@@ -28,10 +28,13 @@ const bool BOTTOM = false;
 const bool OPEN = true;
 const bool CLOSED = false;
 
-static const int k_ticks_per_rev = 1024;
+static const int k_ticks_per_rev = 1440;
 static const int k_wheel_diameter = 6;
-static const double k_max_velocity = 10;
+static const double k_max_velocity = 2;
 
+frc::I2C i2c = {frc::I2C::kOnboard, 2};
+uint8_t lightPattern[1];
+uint8_t arduinoData[1];
 
 //Motors and CS
 frc::Joystick stick0{0};
@@ -90,7 +93,6 @@ void Robot::RobotInit() {
 	driveLF.SetSelectedSensorPosition(0, 0, 0);
 	driveRF.SetSelectedSensorPosition(0, 0, 0);
 
-	frc::CameraServer::GetInstance()->StartAutomaticCapture();
 
 	std::cout << "Robot is ready for the stuff!\n" << endl;
 
@@ -194,13 +196,13 @@ int POINT_LENGTH = 2;
 Waypoint *points = (Waypoint*)malloc(sizeof(Waypoint) * POINT_LENGTH);
 
 Waypoint p1 = { 0, 0, d2r(0)};      
-Waypoint p2 = { 1, 0, d2r(0)};             
+Waypoint p2 = { 2, 0, d2r(0)};             
 points[0] = p1;
 points[1] = p2;
 
 TrajectoryCandidate candidate;
 
-pathfinder_prepare(points, POINT_LENGTH, FIT_HERMITE_CUBIC, PATHFINDER_SAMPLES_HIGH, 0.001, 15.0, 10.0, 60.0, &candidate);
+pathfinder_prepare(points, POINT_LENGTH, FIT_HERMITE_CUBIC, PATHFINDER_SAMPLES_LOW, 0.001, 2.0, 2.0, 10.0, &candidate);
 free(points);
 int length = candidate.length;
 
@@ -230,6 +232,7 @@ std::cout << "About to start encoder follower\n" << endl;
 EncoderFollower* leftFollower = (EncoderFollower*)malloc(sizeof(EncoderFollower));
 EncoderFollower* rightFollower = (EncoderFollower*)malloc(sizeof(EncoderFollower));
 
+
 leftFollower->last_error = 0;
 leftFollower->segment = 0;
 leftFollower->finished = 0;
@@ -253,17 +256,16 @@ EncoderConfig rightConfig;
 rightConfig = {driveRF.GetSelectedSensorPosition(0), k_ticks_per_rev, wheel_cir, 1.0, 0.0, 0.0, 1.0 / k_max_velocity, 0.0};
 std::cout << "Finished right config\n" << endl;
 
-
+int distance = driveLF.GetSelectedSensorPosition(0);
 
 while(t1.Get() < timeOut){
 
 		double l = pathfinder_follow_encoder(leftConfig, leftFollower, lTrajectory, candidate.length, driveLF.GetSelectedSensorPosition(0));
 		double r = pathfinder_follow_encoder(rightConfig, rightFollower, rTrajectory, candidate.length, driveRF.GetSelectedSensorPosition(0));
 
-		printf("Left Percent Encoder %f", l);
-		printf("Right Percent Encoder %f", r);
+		printf("Left Percent Encoder %f\n", l);
+		printf("Right Percent Encoder %f\n", r);
 
-		std::cout << "Gyro Config\n" << endl;
 
 		//double currentYaw = GetAdjustedYaw();
 		double currentYaw = ahrs.GetYaw();
@@ -272,15 +274,11 @@ while(t1.Get() < timeOut){
 		const double K_T = 0.35;
 		double turn = K_T * angle_diffrence;
 
-		std::cout << "Gyro Config Complete\n" << endl;
+		driveLR.Set(ControlMode::PercentOutput, l - turn);
+		driveLF.Set(ControlMode::PercentOutput, l - turn);
 
-		std::cout << "Setting Motors to path\n" << endl;
-
-		driveLR.Set(ControlMode::PercentOutput, l + turn);
-		driveLF.Set(ControlMode::PercentOutput, l + turn);
-
-		driveRR.Set(ControlMode::PercentOutput, r - turn);
-		driveRF.Set(ControlMode::PercentOutput, r - turn);
+		driveRR.Set(ControlMode::PercentOutput, r + turn);
+		driveRF.Set(ControlMode::PercentOutput, r + turn);
 
 		printf("Left Motors %f\n", l + turn);
 		printf("Right Motors %f\n", r - turn);
@@ -314,19 +312,44 @@ double GetAdjustedYaw(){
 	return calculatedOffset;
 }
 
-
+void ChangeLeds(int light){
+	//changes the light modes through I2C bus 
+	switch(light){
+		case 1:
+			lightPattern[0] = 1;
+			i2c.Transaction(lightPattern, 1, arduinoData, 1);
+			std::cout << "Lights set to rainbow chase\n" << endl;
+			break;
+		case 2:
+			lightPattern[0] = 2;
+			i2c.Transaction(lightPattern, 1, arduinoData, 1);
+			std::cout << "Lights set to red\n" << endl;
+			break;
+		case 3:
+			lightPattern[0] = 3;
+			i2c.Transaction(lightPattern, 1, arduinoData, 1);
+			std::cout << "Lights set to blue\n" << endl;
+			break;
+		case 4:
+			lightPattern[0] = 4;
+			i2c.Transaction(lightPattern, 1, arduinoData, 1);
+			std::cout << "Lights are off\n" << endl;
+			break;
+	}
+}
 void Robot::Autonomous() {
 	driveLF.SetNeutralMode(NeutralMode::Brake);
 	driveLR.SetNeutralMode(NeutralMode::Brake);
 	driveRF.SetNeutralMode(NeutralMode::Brake);
 	driveRR.SetNeutralMode(NeutralMode::Brake);
 	
-	TestPath(1);
+	TestPath(10);
 }
 
 
 void Robot::OperatorControl() {
-
+	driveLF.SetSelectedSensorPosition(0,0,0);
+	driveRF.SetSelectedSensorPosition(0,0,0);
 
 	double left;
 	double right;
