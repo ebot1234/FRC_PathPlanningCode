@@ -4,6 +4,7 @@
 #include <stdlib.h>
 
 #include <frc/Timer.h>
+#include <frc/I2C.h>
 #include <frc/smartdashboard/SmartDashboard.h>
 #include "ctre/Phoenix.h"
 #include "ctre/phoenix/MotorControl/ControlMode.h"
@@ -32,7 +33,7 @@ static const int k_ticks_per_rev = 1440;
 static const int k_wheel_diameter = 6;
 static const double k_max_velocity = 2;
 
-frc::I2C i2c = {frc::I2C::kOnboard, 2};
+frc::I2C i2c = {frc::I2C::kOnboard};
 uint8_t lightPattern[1];
 uint8_t arduinoData[1];
 
